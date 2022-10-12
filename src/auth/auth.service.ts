@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
+
+import { MONGO_DUPLICATE_KEY_ERROR_NUMBER } from '../common/constants';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -12,8 +15,23 @@ export class AuthService {
     private readonly userModel: Model<User>,
   ) {}
 
-  create(createAuthDto: CreateUserDto) {
-    return 'This action adds a new auth';
+  async create(createUserDto: CreateUserDto) {
+    const { password, ...userData } = createUserDto;
+    console.log(createUserDto);
+    try {
+      const user = await this.userModel.create({
+        password: bcrypt.hashSync(password, 10),
+        ...userData,
+      });
+      delete user.password;
+      return user;
+    } catch (err) {
+      if (err.code === MONGO_DUPLICATE_KEY_ERROR_NUMBER) {
+        throw new BadRequestException(
+          `Cant create user. ${JSON.stringify(err.keyValue)}`,
+        );
+      }
+    }
   }
 
   findAll() {
