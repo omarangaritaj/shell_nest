@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EnvConfiguration } from './config/app.config';
 import { JoiConfigSchema } from './config/joi.config';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { JoiConfigSchema } from './config/joi.config';
       validationSchema: JoiConfigSchema,
     }),
     MongooseModule.forRoot(process.env.MONGO_URL),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
